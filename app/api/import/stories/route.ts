@@ -21,15 +21,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not read CSV body" }, { status: 400 });
   }
 
-  // Temporary debug — decode JWT payload to confirm which key is set
+  // Temporary debug — test actual Supabase query
   if (!dryRun) {
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-    let role = "unknown";
-    try {
-      const payload = key.split(".")[1];
-      role = JSON.parse(Buffer.from(payload, "base64").toString()).role;
-    } catch {}
-    return NextResponse.json({ debug: true, key_role: role, key_length: key.length });
+    const db = createServerClient();
+    const { data, error } = await db.from("stories").select("id").limit(1);
+    return NextResponse.json({ debug: true, data, error: error ? { message: error.message, code: (error as any).code, details: (error as any).details } : null });
   }
 
   const result = await importCsv(csvText, dryRun);
