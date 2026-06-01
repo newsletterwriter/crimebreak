@@ -21,6 +21,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not read CSV body" }, { status: 400 });
   }
 
+  // Sanity check env vars before hitting DB
+  if (!dryRun && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return NextResponse.json({ error: "NEXT_PUBLIC_SUPABASE_URL not set" }, { status: 500 });
+  }
+  if (!dryRun && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY not set" }, { status: 500 });
+  }
+
   const result = await importCsv(csvText, dryRun);
 
   // Fire push notifications for newly inserted stories
