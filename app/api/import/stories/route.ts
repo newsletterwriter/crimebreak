@@ -21,19 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not read CSV body" }, { status: 400 });
   }
 
-  // Temporary debug — show exact URL being used
-  if (!dryRun) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const targetUrl = `${url}/rest/v1/stories?limit=1`;
-    const res = await fetch(targetUrl, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-    });
-    const body = await res.text();
-    return NextResponse.json({ debug: true, targetUrl, status: res.status, body: body.slice(0, 200) });
-  }
-
-  const result = await importCsv(csvText, dryRun);
+const result = await importCsv(csvText, dryRun);
 
   // Fire push notifications for newly inserted stories
   if (!dryRun && result.inserted > 0) {
