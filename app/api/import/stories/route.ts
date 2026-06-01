@@ -21,12 +21,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not read CSV body" }, { status: 400 });
   }
 
-  // Sanity check env vars before hitting DB
-  if (!dryRun && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    return NextResponse.json({ error: "NEXT_PUBLIC_SUPABASE_URL not set" }, { status: 500 });
-  }
-  if (!dryRun && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY not set" }, { status: 500 });
+  // Temporary debug — remove after confirming env vars
+  if (!dryRun) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "(not set)";
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "(not set)";
+    return NextResponse.json({
+      debug: true,
+      url_prefix: url.slice(0, 40),
+      url_length: url.length,
+      key_prefix: key.slice(0, 10),
+      key_length: key.length,
+    });
   }
 
   const result = await importCsv(csvText, dryRun);
