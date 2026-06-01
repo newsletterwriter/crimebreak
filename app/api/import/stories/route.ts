@@ -21,19 +21,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not read CSV body" }, { status: 400 });
   }
 
-  // Temporary debug — raw fetch to Supabase REST
+  // Temporary debug — check PostgREST root + try with Accept-Profile header
   if (!dryRun) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const res = await fetch(`${url}/rest/v1/stories?limit=1`, {
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-    });
-    const body = await res.text();
-    return NextResponse.json({ debug: true, status: res.status, body });
+    const headers = { apikey: key, Authorization: `Bearer ${key}`, "Accept-Profile": "public" };
+    const [root, withProfile] = await Promise.all([
+      fetch(`${url}/rest/v1/`, { headers }).then(r => r.text()),
+      fetch(`${url}/rest/v1/stories?limit=1`, { headers }).then(async r => ({ status: r.status, body: await r.text() })),
+    ]);
+    return NextResponse.json({ debug: true, root: root.slice(0, 300), withProfile });
   }
 
   const result = await importCsv(csvText, dryRun);
