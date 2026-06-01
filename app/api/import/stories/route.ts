@@ -21,11 +21,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not read CSV body" }, { status: 400 });
   }
 
-  // Temporary debug — test actual Supabase query
+  // Temporary debug — raw fetch to Supabase REST
   if (!dryRun) {
-    const db = createServerClient();
-    const { data, error } = await db.from("stories").select("id").limit(1);
-    return NextResponse.json({ debug: true, data, error: error ? { message: error.message, code: (error as any).code, details: (error as any).details } : null });
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const res = await fetch(`${url}/rest/v1/stories?limit=1`, {
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const body = await res.text();
+    return NextResponse.json({ debug: true, status: res.status, body });
   }
 
   const result = await importCsv(csvText, dryRun);
